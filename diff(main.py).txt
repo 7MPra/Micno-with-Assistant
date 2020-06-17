@@ -1,0 +1,97 @@
+--- __main__.py	2020-06-17 19:14:49.132579813 +0900
++++ main.py	2020-06-17 19:24:21.048932186 +0900
+@@ -14,9 +14,13 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
+-
+ from __future__ import print_function
+ 
++import subprocess
++
++from gi.repository import Notify, Gtk
++Notify.init('Micno With Assistant')
++
+ import argparse
+ import json
+ import os.path
+@@ -36,28 +40,26 @@
+ 
+ 
+ WARNING_NOT_REGISTERED = """
+-    This device is not registered. This means you will not be able to use
+-    Device Actions or see your device in Assistant Settings. In order to
+-    register this device follow instructions at:
+-
++    このデバイスは登録されていないため、デバイスアクションやアシスタントの設定で確認することが出来ません。
++    このデバイスを登録するには以下の手順に従ってください。
+     https://developers.google.com/assistant/sdk/guides/library/python/embed/register-device
+ """
+ 
+-
+ def process_event(event):
+-    """Pretty prints events.
+-
+-    Prints all events that occur with two spaces between each new
+-    conversation and a single space between turns of a conversation.
+-
+-    Args:
+-        event(event.Event): The current event to process.
+-    """
+     if event.type == EventType.ON_CONVERSATION_TURN_STARTED:
+         print()
+ 
+     print(event)
+-
++    if (event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED and
++            event.args and event.args['text']):
++        note = Notify.Notification.new(Notify.get_app_name(),'聞き取りました:{}'.format(event.args['text']),'mic-volume-high')
++        note.set_urgency(Notify.Urgency.NORMAL)
++        note.show()
++        subprocess.Popen(['python3','{}/textinput.py'.format(os.path.dirname(os.path.abspath(__file__))),'--device-id',device_id_global,'--device-model-id',device_model_id_global,'--query',event.args['text']])
++    if (event.type == EventType.ON_CONVERSATION_TURN_STARTED):
++        note = Notify.Notification.new(Notify.get_app_name(),'聞き取り中です…','mic-volume-high')
++        note.set_urgency(Notify.Urgency.NORMAL)
++        note.show()
+     if (event.type == EventType.ON_CONVERSATION_TURN_FINISHED and
+             event.args and not event.args['with_follow_on_turn']):
+         print()
+@@ -118,21 +120,24 @@
+     if not args.device_model_id and not device_model_id:
+         raise Exception('Missing --device-model-id option')
+ 
+-    # Re-register if "device_model_id" is given by the user and it differs
+-    # from what we previously registered with.
+     should_register = (
+         args.device_model_id and args.device_model_id != device_model_id)
+ 
+     device_model_id = args.device_model_id or device_model_id
+ 
++    note = Notify.Notification.new(Notify.get_app_name(),'Micno with Assistant は動作中です','mic-volume-high')
++    note.set_urgency(Notify.Urgency.NORMAL)
++    note.show()
++
+     with Assistant(credentials, device_model_id) as assistant:
++        global device_id_global, device_model_id_global
+         events = assistant.start()
+ 
+         device_id = assistant.device_id
+         print('device_model_id:', device_model_id)
+         print('device_id:', device_id + '\n')
+-
+-        # Re-register if "device_id" is different from the last "device_id":
++        device_id_global = device_id
++        device_model_id_global = device_model_id
+         if should_register or (device_id != last_device_id):
+             if args.project_id:
+                 register_device(args.project_id, credentials,
+@@ -150,9 +155,7 @@
+         for event in events:
+             if event.type == EventType.ON_START_FINISHED and args.query:
+                 assistant.send_text_query(args.query)
+-
+             process_event(event)
+ 
+-
+ if __name__ == '__main__':
+     main()
