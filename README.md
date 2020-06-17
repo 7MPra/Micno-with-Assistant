@@ -4,6 +4,11 @@
 # 使用方法
 予め `client_secret_*.json`を用意しておいて、`setup.sh`を実行してください。
 
+# 動作確認環境
+Debian 10
+
+Python3.7.3
+
 # 通知
 This software includes the work that is distributed in the Apache License 2.0.
 
