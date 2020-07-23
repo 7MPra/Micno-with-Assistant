@@ -1,6 +1,6 @@
 cd `dirname $0`
-if [[ ! `which pip` ]];then
-    pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY curl -kL https://bootstrap.pypa.io/get-pip.py | python3
+if [ ! `which pip` ];then
+    curl -kL https://bootstrap.pypa.io/get-pip.py | pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY python3
 fi
 python3 -m pip install -r ./requirements.txt
 mkdir html
