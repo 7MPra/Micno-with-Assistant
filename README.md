@@ -2,7 +2,7 @@
 これは、MicnoLinux向けのGoogleのAIアシスタント用クライアントです。
 
 # 使用方法
-予め `client_secret_*.json`を用意しておいて、`setup.sh`を実行してください。
+予め `client_secret_*.json`を用意しておいて、使用したいユーザー上で`setup.sh`を実行してください。(なるべくスーパーユーザーでは実行しないで下さい)
 
 # 動作確認環境
 Debian 10
